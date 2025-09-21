@@ -1,8 +1,9 @@
 resource "aws_instance" "api" {
+  for_each        = var.app_subnet_ids
   ami             = "ami-0a716d3f3b16d290c"
   instance_type   = "t3.nano"
-  subnet_id       = aws_subnet.private.id
-  security_groups = [aws_security_group.backend_sg.id]
+  subnet_id       = each.value
+  security_groups = [var.backend_security_group_id]
 
   user_data = <<-EOL
     #!/bin/bash
@@ -15,11 +16,11 @@ resource "aws_instance" "api" {
     sudo systemctl start docker
 
     # Run your container (replace nginx:latest with your image)
-    sudo docker run -d -p 8080:8080 --name myapp ${local.api_container_name}
+    sudo docker run -d -p 8080:8080 --name myapp ${var.api_container_name}
 
     EOL
 
   tags = {
-    Name = "api"
+    Name = "${var.name}-api-${each.key}"
   }
 }

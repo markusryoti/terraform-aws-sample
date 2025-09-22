@@ -63,40 +63,19 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 }
 
-# resource "aws_nat_gateway" "nat" {
-#   for_each      = var.app_subnets
-#   allocation_id = aws_eip.nat.id
-#   subnet_id     = aws_subnet.app[each.key].id
-
-#   tags = {
-#     Name = "${var.name}-${each.key}-nat"
-#   }
-# }
-
+# Only one nat
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = values(aws_subnet.public)[0].id # place in first public subnet
+  subnet_id     = values(aws_subnet.public)[0].id
 
   tags = {
     Name = "${var.name}-nat"
   }
+
+  depends_on = [aws_internet_gateway.igw]
 }
 
 # Private Route Table
-# resource "aws_route_table" "private" {
-#   for_each = var.app_subnets
-#   vpc_id   = aws_vpc.main.id
-
-#   route {
-#     cidr_block     = "0.0.0.0/0"
-#     nat_gateway_id = aws_nat_gateway.nat[each.key].id
-#   }
-
-#   tags = {
-#     Name = "${var.name}-${each.key}-private-rt"
-#   }
-# }
-
 resource "aws_route_table" "private" {
   for_each = var.app_subnets
   vpc_id   = aws_vpc.main.id
@@ -116,12 +95,6 @@ resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.app[each.key].id
   route_table_id = aws_route_table.private[each.key].id
 }
-
-# resource "aws_route_table_association" "private" {
-#   for_each       = var.app_subnets
-#   subnet_id      = aws_subnet.app[each.key].id
-#   route_table_id = aws_route_table.public[each.key].id
-# }
 
 # Security Groups
 resource "aws_security_group" "web_sg" {
@@ -173,11 +146,13 @@ resource "aws_security_group" "backend_sg" {
 }
 
 output "vpc_id" { value = aws_vpc.main.id }
+
 output "public_ids" {
   value = { for k, s in aws_subnet.public : k => s.id }
 }
 output "app_ids" {
   value = { for k, s in aws_subnet.app : k => s.id }
 }
+
 output "webapp_security_group_id" { value = aws_security_group.web_sg.id }
 output "backend_security_group_id" { value = aws_security_group.backend_sg.id }

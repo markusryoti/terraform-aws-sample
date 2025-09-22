@@ -8,7 +8,8 @@ terraform {
   }
 }
 
-resource "aws_s3_bucket" "state_bucket" {
-  bucket = "markusryoti-demo-terraform-state-bucket"
-  region = "eu-north-1"
-}
+# Keep out of state
+# resource "aws_s3_bucket" "state_bucket" {
+#   bucket = "markusryoti-demo-terraform-state-bucket"
+#   region = "eu-north-1"
+# }

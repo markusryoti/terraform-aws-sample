@@ -5,11 +5,11 @@ locals {
 }
 
 resource "aws_instance" "web" {
-  for_each        = var.public_subnet_ids
-  ami             = "ami-0a716d3f3b16d290c"
-  instance_type   = "t3.nano"
-  subnet_id       = each.value
-  security_groups = [var.webapp_security_group_id]
+  for_each               = var.public_subnet_ids
+  ami                    = "ami-0a716d3f3b16d290c"
+  instance_type          = "t3.nano"
+  subnet_id              = each.value
+  vpc_security_group_ids = [var.webapp_security_group_id]
 
   user_data = <<-EOF
         #!/bin/bash
